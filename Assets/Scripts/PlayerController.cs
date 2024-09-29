@@ -172,6 +172,7 @@ public class PlayerController : MonoBehaviour
         originalScale = transform.localScale.x;
         originalColor = playerImage.color;
         playerFlagManager.isGoal = false;
+        playerFlagManager.isGameEnd = false;
 
         PipeController.isAllPipeMoving = true;
 
@@ -185,73 +186,91 @@ public class PlayerController : MonoBehaviour
             PlayerStatus.gaugeCurrentValue = satietyGauge.value; //gaugeCurrentValueはstatic変数、シーンが変わっても持ち越されうる値
         }
 
+        // イベントの購読
+        // 別のクラスで定義されたイベントを購読させるのはこういう感じにやります
+        // こうすることで、イベントが発生したときに、このクラスのメソッドが呼ばれるようになります
+        // なんとなくこういう手段を知りたがっていた気がしたので実験的にやってますが、そんなにデバッグしてないので色々見てみてください
+        playerFlagManager.deathColliderEvent += PlayerInoperable;
+        // ここにゴール用/ポータル用のイベントも追加できそうな気がしますよね（なんとなく）
+        // playerFlagManager.goalColliderEve... 的な
     }
 
-    // Update is called once per frame
+    // ★:入力系の処理はこちらに書くといいかもです
     void Update()
     {
+        // ★：こちらは常に処理するので、Updateの最初に書いてますね、分かりやすいです
         // 初回のジャンプがまだなら最初のフレームは以下の処理だけ行う
         // 最初のジャンプの待機中に満腹度を減らさせないため
-        if (!GameManager.isGameStarted) 
-        {
 
-            if (Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0))
-            {
-                Jump();
-            }
-            return;
+        // ジャンプ条件チェック && 入力情報チェック
+        if (IsCanJump() && Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0))
+        {
+            Jump();
         }
 
-        if(playerFlagManager.isInPortal)
-        {
+        // ★：ガード節を使うといい感じに見通しがよくなります
+        if (!GameManager.isGameStarted) return;
+        
+        // これ以降もなにか処理がある可能性があるので、ガード節は残しておきます
+    }
+
+    /// <summary>
+    /// ★:計算系の処理はこちらに書く感じで
+    /// [///] とやるとサマリーコメントが記述できます、これは他クラスからもマウスオーバーで確認出来たりして便利です
+    /// </summary>
+    private void FixedUpdate() {
+
+        // ★：ガード節を使うといい感じに見通しがよくなります
+        if (!GameManager.isGameStarted) return;
+
+        if (playerFlagManager.isInPortal) {
             RotateInPortal();
             StartCoroutine(ShrinkPlayer());
         }
-        //ジャンプさせたくない状況一覧は
-        // 土管衝突時、ゴール時、ポーズ画面、ゲームオーバー画面、満腹度０になった瞬間
-        if(!playerFlagManager.isCollided && !playerFlagManager.isGoal && !GameManager.isGamePause && !GameManager.isGameOver && !isHungerStart)
-        {
-            if (Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0))
-            {
-                Jump();
-            }
-        }
-        else if(playerFlagManager.isCollided)
-        {
-            PlayerInoperable();
-        }
-        else if(playerFlagManager.isGoal) //isGoalがtrueのとき
+
+        if (playerFlagManager.isGoal) //isGoalがtrueのとき
         {
             MoveToPortal();
 
             // クリア回数の加算
-            if(!hasScoreSent)
-            {
-                PlayerStatus.clearCount++;  
+            if (!hasScoreSent) {
+                PlayerStatus.clearCount++;
+                // ★：UnityRoomAPI???　これでランキング作ってたんですね、すばらしいです
                 UnityroomApiClient.Instance.SendScore(2, PlayerStatus.clearCount, ScoreboardWriteMode.HighScoreDesc);
                 hasScoreSent = true;
             }
         }
 
-
-        if(!playerFlagManager.isGoal && !playerFlagManager.isCollided)
-        {
+        //　★二つのフラグを見るのが大変そうなので、ゲーム終了という定義を作ってみます
+        // 本当はEnumかIntでStateNumber（ゲーム進行状態ナンバー）とかを作るとよさそうですが、いったんBoolで
+        if (!playerFlagManager.isGameEnd) {
             gaugeCount++;  //満腹度ゲージを減少させるための内部の値 毎フレーム加算
         }
 
-        if(gaugeCount > gaugeDecreaseCount) //gaugeCountがこの閾値を上回ったら満腹度ゲージを減少
+        if (gaugeCount > gaugeDecreaseCount) //gaugeCountがこの閾値を上回ったら満腹度ゲージを減少
         {
             SatietyGaugeDecrease(gaugeDecreaseValue); //gaugeDecreaseValueの値だけ満腹度ゲージを減らす
             SatietyGaugeUpdate();
             gaugeCount = (int)Variables.zero;
         }
+    }
 
-        if(PlayerStatus.gaugeCurrentValue <= gaugeMin) //満腹度が0になったら
-        {
-            PlayerInOperableByHunger(); //満腹度が0になったときに呼ばれ、ゲームオーバーに
-            isHungerStart = true;
-        }
-        
+    // ジャンプさせたくない状況取得
+    // ★：ここに追記していくと良いと思います（この先多分増えますよね
+
+    private bool IsCanJump()
+    {
+        // 土管衝突時
+        // ゴール時
+        // ポーズ画面
+        // ゲームオーバー画面
+        // 満腹度0になった瞬間
+        return
+            !playerFlagManager.isCollided &&
+            !playerFlagManager.isGoal && 
+            !GameManager.isGamePause &&
+            !GameManager.isGameOver &&
+            !isHungerStart;
     }
 
     public void Jump()
@@ -303,6 +322,9 @@ public class PlayerController : MonoBehaviour
 
     public void PlayerInoperable() //土管とデストロイヤエリアにぶつかったときに呼ばれる
     {
+        // ★：アクティブじゃないときは実行しない
+        if (!gameObject.activeInHierarchy) return;
+
         playerImage.sprite = image_Damaged; //負傷画像に変更
         playerCollider.isTrigger = true; //isTriggerをオンにし、失敗時に土管をすり抜けるようにする
         playerFlagManager.isGoal = false; //ぶつかったらゴールできなくする
@@ -436,23 +458,23 @@ void SatietyGaugeDecrease(float decreaseValue) //満腹度の減少
         return;
     }
     PlayerStatus.gaugeCurrentValue -= decreaseValue;
+
+
+    if (PlayerStatus.gaugeCurrentValue <= gaugeMin) //満腹度が0になったら
+    {
+        PlayerInOperableByHunger(); //満腹度が0になったときに呼ばれ、ゲームオーバーに
+        isHungerStart = true;
+    }
 }
 
 void SatietyGaugeUpdate() //満腹度の更新
 {
-    // 現在のゲージの値が最大値を超えた場合
-    if (PlayerStatus.gaugeCurrentValue > gaugeMax)
-    {
-        // 現在のゲージの値を最大値にする
-        PlayerStatus.gaugeCurrentValue = gaugeMax;
-    }
-    // 現在のゲージの値が最小値より小さい場合
-    else if (PlayerStatus.gaugeCurrentValue < gaugeMin)
-    {
-        // 現在のゲージの値を最小値にする
-        PlayerStatus.gaugeCurrentValue = gaugeMin;
-    }
+    // ★値制限処理はこんな風にClampをつかうとよいかもです
+    // それに伴う処理がある場合は、以前の処理に戻していただけますと
+    //満腹度の値を最小値と最大値の間に制限する
+    PlayerStatus.gaugeCurrentValue = Mathf.Clamp(PlayerStatus.gaugeCurrentValue, gaugeMin, gaugeMax); 
 
+    // ★常時更新なので、変化があった時だけ変更のほうが良いかも？
     satietyGauge.value = PlayerStatus.gaugeCurrentValue;
     satietyGaugeText.SetText(PlayerStatus.gaugeCurrentValue.ToString("f1"));
 }
