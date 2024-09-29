@@ -53,6 +53,7 @@ public class GoalController : MonoBehaviour
             AudioSource.PlayClipAtPoint(SE_goalCollided, Camera.main.transform.position, goalCollidedSEVolume); //ゴールと接触した時の効果音を再生
         
             playerFlagManager.isGoal = true; //ゴールに到達したフラグをtrueにする ずっとPlayerCleared()が呼び出されるのを防ぐ
+            playerFlagManager.isGameEnd = true; //ゲーム終了のフラグをtrueにする
             playerController.StartMovingToPortal();
 
             Debug.Log("ゴールに到達しました");

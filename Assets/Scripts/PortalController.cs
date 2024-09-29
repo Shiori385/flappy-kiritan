@@ -87,6 +87,7 @@ public class PortalController : MonoBehaviour
         {
                     
             playerFlagManager.isInPortal = true; //ポータルに入ったフラグをtrueにする
+            playerFlagManager.isGameEnd = true;
             // isInPortalがtrue → IrisShotのIrisOutが2秒後に始まり、その際にisInPortalがfalseになる
             SE_portalCollided.Play();
             StartCoroutine(StartSayPortalCV());
