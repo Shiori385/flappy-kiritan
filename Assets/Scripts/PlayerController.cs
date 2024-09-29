@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
@@ -9,8 +8,6 @@ public class PlayerController : MonoBehaviour
 {
     [Header("PlayerFlagManager")]
     [SerializeField] PlayerFlagManager playerFlagManager;
-    [Header("ゲーム開始のUI")]
-    [SerializeField] GameObject UI_GameStart;
     [Header("スコアのUI")]
     [SerializeField] public TMP_Text UI_ScoreNum;
     [Header("スコアの差分のUI")]
@@ -31,9 +28,6 @@ public class PlayerController : MonoBehaviour
     [SerializeField] GameObject particlePrefab;
     [Header("パーティクルの生成位置のオフセット")]
     [SerializeField] Vector3 particleOffset = new Vector3(0, 0, 0);
-
-    [Header("ObjectGenerator")]
-    [SerializeField] ObjectGenerator objectGenerator;
 
     #region Var_Jump&respawn
     [Header("プレイヤーのジャンプ力")]
