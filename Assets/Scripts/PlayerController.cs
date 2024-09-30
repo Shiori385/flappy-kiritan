@@ -6,8 +6,12 @@ using unityroom.Api;
 
 public class PlayerController : MonoBehaviour
 {
+    [Header("PlayerMasterData")]
+    [SerializeField] PlayerMasterData playerMasterData;
+
     [Header("PlayerFlagManager")]
     [SerializeField] PlayerFlagManager playerFlagManager;
+
     [Header("スコアのUI")]
     [SerializeField] public TMP_Text UI_ScoreNum;
     [Header("スコアの差分のUI")]
@@ -15,34 +19,16 @@ public class PlayerController : MonoBehaviour
 
     [Header("アイテム取得のSE")]
     [SerializeField] AudioClip SE_GetScore;
-    [Header("SEの音量")]
-    [SerializeField] float SEVolume = 0.1f;
-    [Header("アイテムのスコア（カロリー）")]
-    [SerializeField] float itemCalory = 41f;
-    [Header("カロリーのオフセット")]
-    [SerializeField] float caloryOffset = 0.3f;
     [Header("いま獲得したスコアを表示したかのフラグ")]
     [HideInInspector]public bool isScoreGotNowShowed = false;
 
     [Header("ジャンプ時のパーティクルのプレハブ")]
     [SerializeField] GameObject particlePrefab;
-    [Header("パーティクルの生成位置のオフセット")]
-    [SerializeField] Vector3 particleOffset = new Vector3(0, 0, 0);
 
-    #region Var_Jump&respawn
-    [Header("プレイヤーのジャンプ力")]
-    [SerializeField] float jumpPower = 1f;
-
+    #region Var_respawn
     [Header("プレイヤーの復活地点")]
     [SerializeField] GameObject playerRespawnPos;
     #endregion
-
-    #region Var_Inoperable
-    [Header("失敗時の右への加速度")]
-    [SerializeField] float fallSpeed = 1f;
-    [Header("失敗時の右への回転速度（負なら時計回り）")]
-    [SerializeField] float rotateSpeed = -1f;
-    #endregion      
 
     #region Var_Image
     [Header("プレイヤーの画像：通常")]
@@ -88,47 +74,10 @@ public class PlayerController : MonoBehaviour
     [SerializeField] Slider satietyGauge;
     [Header("満腹度ゲージ：数値")]
     [SerializeField] TMP_Text satietyGaugeText;
-    [Header("満腹度ゲージの最大値")]
-    [SerializeField] float gaugeMax = 100f;
-    [Header("満腹度ゲージの最小値")]
-    [SerializeField] float gaugeMin = 0f;
-    [Header("満腹度ゲージを減少させるための内部の値 毎フレーム加算")]
-    [SerializeField] float gaugeCount; 
-    [Header("↑この値がこの値に達したら、")] 
-    [SerializeField] int gaugeDecreaseCount = 20;
-    [Header("満腹度ゲージがこれだけ減少する")]
-    [SerializeField] float gaugeDecreaseValue = 1f;
-
-    [Header("満腹度ゲージのジャンプでの減少値")]
-    [SerializeField] float gaugeDecreaseValue_Jump = 0.3f;
-    [Header("満腹度ゲージの回復量")]
-    [SerializeField] float gaugeHealValue = 10f;
-    [Header("満腹度ゲージのアイテムでの回復量の補正値（指数）")]
-    [SerializeField] float healValueOffset = 2.0f; 
-
-    #endregion
-
-
-    #region Falling_Effect
-        [Header("落下時の拡大する速さ")]
-        [SerializeField] float growthRate = 0.1f;
-        [Header("落下時の最大サイズ")]
-        [SerializeField] float maxScale = 2.5f;
-        private Color originalColor;
-        [Header("落下時の暗くなる速度")]
-        [SerializeField] float darkeningRate = 0.5f;
-        [Header("落下時の最小の明るさ")]
-        [SerializeField] float minBrightness = 0.2f;
     #endregion
 
     #region Var_Goal
-        [Header("ゴール後の移動位置＝ポータルの位置")]
-        [SerializeField] private Vector2 finalPosition = new Vector2(0,0);
-        [Header("ゴール後の最小速度")]
-        [SerializeField] private float minSpeed = 0.01f;
         private float initialToPortalSpeed; //ポータルへ向かう初速度
-        [Header("プレイヤーの加速度（減速させるので負の値を入れよ）")]
-        [SerializeField] private float deceleration = 0.5f;
         float currentSpeed; //現在のポータルへ向かう速度
         float elapsedTime; //経過時間
     #endregion
@@ -137,6 +86,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField]PipeController pipeController;
 
     #region Var_Internal
+        Color originalColor;
         Rigidbody2D playerRB;
         Collider2D playerCollider;
         float usualGravityScale = 1.35f; //重力加速度
@@ -148,17 +98,8 @@ public class PlayerController : MonoBehaviour
         bool hasScoreSent = false; //スコアを送信したかどうかのフラグ
         bool hasFadeOutSEPlayed = false; //フェードアウト用のSEを再生したかどうかのフラグ
         float scoreDifference = 0f; //スコアの差分
-
     #endregion
 
-    #region Var_ClearEffect
-        [Header("クリア時の縮小にかかる時間（秒）")]
-        [SerializeField] float shrinkDuration = 4f; // 縮小にかかる時間（秒）
-        [Header("クリア時の最小サイズ")]
-        [SerializeField] float minSize = 0f;
-        [Header("クリア時の回転速度（負なら時計回り）")]
-        [SerializeField] private float currentRotationSpeed = 360f; //クリア時の回転速度
-    #endregion
 
 #region ゴール前の関数
     // Start is called before the first frame update
@@ -176,8 +117,8 @@ public class PlayerController : MonoBehaviour
 
         PipeController.isAllPipeMoving = true;
 
-        satietyGauge.maxValue = gaugeMax; //スライダーの最大値を既定の100に設定
-        satietyGauge.minValue = gaugeMin; //スライダーの最小値を既定の0に設定
+        satietyGauge.maxValue = playerMasterData.gaugeMax; //スライダーの最大値を既定の100に設定
+        satietyGauge.minValue = playerMasterData.gaugeMin; //スライダーの最小値を既定の0に設定
         satietyGauge.value = PlayerStatus.gaugeCurrentValue; //スライダーの値を既定の100に設定
         satietyGaugeText.SetText(PlayerStatus.gaugeCurrentValue.ToString("f1")); //スライダーの値を既定の100に設定
 
@@ -244,14 +185,14 @@ public class PlayerController : MonoBehaviour
         //　★二つのフラグを見るのが大変そうなので、ゲーム終了という定義を作ってみます
         // 本当はEnumかIntでStateNumber（ゲーム進行状態ナンバー）とかを作るとよさそうですが、いったんBoolで
         if (!playerFlagManager.isGameEnd) {
-            gaugeCount++;  //満腹度ゲージを減少させるための内部の値 毎フレーム加算
+            playerMasterData.gaugeCount++;  //満腹度ゲージを減少させるための内部の値 毎フレーム加算
         }
 
-        if (gaugeCount > gaugeDecreaseCount) //gaugeCountがこの閾値を上回ったら満腹度ゲージを減少
+        if (playerMasterData.gaugeCount > playerMasterData.gaugeDecreaseCount) //gaugeCountがこの閾値を上回ったら満腹度ゲージを減少
         {
-            SatietyGaugeDecrease(gaugeDecreaseValue); //gaugeDecreaseValueの値だけ満腹度ゲージを減らす
+            SatietyGaugeDecrease(playerMasterData.gaugeDecreaseValue); //gaugeDecreaseValueの値だけ満腹度ゲージを減らす
             SatietyGaugeUpdate();
-            gaugeCount = (int)Variables.zero;
+            playerMasterData.gaugeCount = (int)Variables.zero;
         }
     }
 
@@ -275,7 +216,7 @@ public class PlayerController : MonoBehaviour
 
     public void Jump()
     {
-        GameObject particleEffect = Instantiate(particlePrefab, transform.position + particleOffset, Quaternion.identity);
+        GameObject particleEffect = Instantiate(particlePrefab, transform.position + playerMasterData.particleOffset, Quaternion.identity);
         Destroy(particleEffect, 1.0f);
 
         if(!GameManager.isGameStarted) //初回ジャンプは「isGameStartedをtrueにして、重力を通常にし、SayYellCVさせない」という分岐
@@ -285,18 +226,18 @@ public class PlayerController : MonoBehaviour
             playerRB.gravityScale = usualGravityScale; //重力が既定の値になる
             audioSource_Departure.PlayOneShot(CV_Departure);
 
-            playerRB.velocity = Vector2.up * jumpPower;
+            playerRB.velocity = Vector2.up * playerMasterData.jumpPower;
 
-            SatietyGaugeDecrease(gaugeDecreaseValue_Jump); //満腹度の減少
+            SatietyGaugeDecrease(playerMasterData.gaugeDecreaseValue_Jump); //満腹度の減少
             SatietyGaugeUpdate(); //満腹度の更新
             return; //SayYellCVは言わせない
 
         }
 
         SayYellCV(audioSource_Yell, CV_Yell);
-        playerRB.velocity = Vector2.up * jumpPower;
+        playerRB.velocity = Vector2.up * playerMasterData.jumpPower;
 
-        SatietyGaugeDecrease(gaugeDecreaseValue_Jump); //満腹度の減少
+        SatietyGaugeDecrease(playerMasterData.gaugeDecreaseValue_Jump); //満腹度の減少
         SatietyGaugeUpdate(); //満腹度の更新
     }
 
@@ -328,8 +269,8 @@ public class PlayerController : MonoBehaviour
         playerImage.sprite = image_Damaged; //負傷画像に変更
         playerCollider.isTrigger = true; //isTriggerをオンにし、失敗時に土管をすり抜けるようにする
         playerFlagManager.isGoal = false; //ぶつかったらゴールできなくする
-        playerRB.AddForce(Vector2.right * fallSpeed);
-        playerRB.AddTorque(rotateSpeed); //失敗時に右に回転する
+        playerRB.AddForce(Vector2.right * playerMasterData.fallSpeed);
+        playerRB.AddTorque(playerMasterData.rotateSpeed); //失敗時に右に回転する
         StartCoroutine(GrowCharacter());  //土管にぶつかって落ちていくとき、だんだん大きくする
         StartCoroutine(DarkenCharacter()); //土管にぶつかって落ちていくとき、だんだん暗くする
 
@@ -444,10 +385,10 @@ public class PlayerController : MonoBehaviour
 #region SatietyGauge_Function 満腹度関連
 public void SatietyGaugeInit() //満腹度の初期化
 {
-    satietyGauge.maxValue = gaugeMax;
-    satietyGauge.minValue = gaugeMin;
-    satietyGauge.value = gaugeMax;
-    satietyGaugeText.SetText(gaugeMax.ToString());
+    satietyGauge.maxValue = playerMasterData.gaugeMax;
+    satietyGauge.minValue = playerMasterData.gaugeMin;
+    satietyGauge.value = playerMasterData.gaugeMax;
+    satietyGaugeText.SetText(playerMasterData.gaugeMax.ToString());
     PlayerStatus.gaugeCurrentValue = satietyGauge.value; //gaugeCurrentValueはstatic変数、シーンが変わっても持ち越されうる値
 }
 
@@ -460,7 +401,7 @@ void SatietyGaugeDecrease(float decreaseValue) //満腹度の減少
     PlayerStatus.gaugeCurrentValue -= decreaseValue;
 
 
-    if (PlayerStatus.gaugeCurrentValue <= gaugeMin) //満腹度が0になったら
+    if (PlayerStatus.gaugeCurrentValue <= playerMasterData.gaugeMin) //満腹度が0になったら
     {
         PlayerInOperableByHunger(); //満腹度が0になったときに呼ばれ、ゲームオーバーに
         isHungerStart = true;
@@ -472,7 +413,7 @@ void SatietyGaugeUpdate() //満腹度の更新
     // ★値制限処理はこんな風にClampをつかうとよいかもです
     // それに伴う処理がある場合は、以前の処理に戻していただけますと
     //満腹度の値を最小値と最大値の間に制限する
-    PlayerStatus.gaugeCurrentValue = Mathf.Clamp(PlayerStatus.gaugeCurrentValue, gaugeMin, gaugeMax); 
+    PlayerStatus.gaugeCurrentValue = Mathf.Clamp(PlayerStatus.gaugeCurrentValue, playerMasterData.gaugeMin, playerMasterData.gaugeMax); 
 
     // ★常時更新なので、変化があった時だけ変更のほうが良いかも？
     satietyGauge.value = PlayerStatus.gaugeCurrentValue;
@@ -492,7 +433,7 @@ void OnTriggerEnter2D(Collider2D collision) //アイテムとぶつかったら�
                 float itemScale = collision.gameObject.transform.localScale.x;
                 AddScore(itemScale); //スコア加算処理をする　（カロリー）
 
-                AudioSource.PlayClipAtPoint(SE_GetScore, Camera.main.transform.position, SEVolume); //SEを鳴らす
+                AudioSource.PlayClipAtPoint(SE_GetScore, Camera.main.transform.position, playerMasterData.SEVolume); //SEを鳴らす
 
                 SatietyGaugeHeal(itemScale); //満腹度ゲージを回復 すぐ下に定義
 
@@ -508,7 +449,7 @@ void OnTriggerEnter2D(Collider2D collision) //アイテムとぶつかったら�
 
 void AddScore(float itemScale) //アイテムをとるたびにスコアを加算する
 {
-    scoreDifference = itemCalory * Mathf.Pow(itemScale + caloryOffset, healValueOffset); //スコアを加算する 41*(0.7~1.3 +0.3)^2
+    scoreDifference = playerMasterData.itemCalory * Mathf.Pow(itemScale + playerMasterData.caloryOffset, playerMasterData.healValueOffset); //スコアを加算する 41*(0.7~1.3 +0.3)^2
     PlayerStatus.score += scoreDifference; //スコアを加算する
     UpdateScoreUI(); //スコアをUIに表示する
 }
@@ -521,7 +462,7 @@ void ShowCaloryGotNow() //今、得たスコア（カロリー）の表示
 
 void SatietyGaugeHeal(float itemScale) //満腹度ゲージの回復
 {
-    PlayerStatus.gaugeCurrentValue += gaugeHealValue * Mathf.Pow(itemScale, healValueOffset); //0.7~1.3の二乗を掛ける
+    PlayerStatus.gaugeCurrentValue += playerMasterData.gaugeHealValue * Mathf.Pow(itemScale, playerMasterData.healValueOffset); //0.7~1.3の二乗を掛ける
     SatietyGaugeUpdate();
 }
 
@@ -548,7 +489,7 @@ public void StartMovingToPortal()
 void MoveToPortal()
 {
     Vector2 currentPosition = transform.position;
-    float distanceToFinal = Vector2.Distance(currentPosition, finalPosition);
+    float distanceToFinal = Vector2.Distance(currentPosition, playerMasterData.finalPosition);
 
     // ポータルの最終地点に十分近づいたら停止
     if (distanceToFinal == 0.0f)
@@ -561,10 +502,10 @@ void MoveToPortal()
     elapsedTime += Time.deltaTime;
 
     // 減速を適用
-    currentSpeed = Mathf.Max(initialToPortalSpeed + deceleration * elapsedTime, minSpeed);
+    currentSpeed = Mathf.Max(initialToPortalSpeed + playerMasterData.deceleration * elapsedTime, playerMasterData.minSpeed);
 
     // 現在位置から最終位置への方向ベクトルを計算
-    Vector2 direction = (finalPosition - currentPosition).normalized;
+    Vector2 direction = (playerMasterData.finalPosition - currentPosition).normalized;
 
     // 新しい速度を設定
     playerRB.velocity = direction * currentSpeed;
@@ -577,7 +518,7 @@ void MoveToPortal()
     void RotateInPortal()
     {       
         // フレームレートに依存しない回転速度を計算
-        float rotationThisFrame = currentRotationSpeed * Time.deltaTime;
+        float rotationThisFrame = playerMasterData.currentRotationSpeed * Time.deltaTime;
     
         // 回転を適用
         playerRB.AddTorque(rotationThisFrame);
@@ -587,13 +528,13 @@ void MoveToPortal()
     {
 
         Vector3 initialScale = transform.localScale;
-        Vector3 targetScale = Vector3.one * minSize;
+        Vector3 targetScale = Vector3.one * playerMasterData.minSize;
         float elapsedTime = 0f;
 
-        while (elapsedTime < shrinkDuration)
+        while (elapsedTime < playerMasterData.shrinkDuration)
         {
             elapsedTime += Time.deltaTime;
-            float t = elapsedTime / shrinkDuration;
+            float t = elapsedTime / playerMasterData.shrinkDuration;
             transform.localScale = Vector3.Lerp(initialScale, targetScale, t);
             yield return null;
         }
@@ -617,10 +558,10 @@ void MoveToPortal()
 #region 落下演出
     IEnumerator GrowCharacter() //土管にぶつかって落ちていくとき、だんだん大きくする
     {
-        while (transform.localScale.x < maxScale)
+        while (transform.localScale.x < playerMasterData.maxScale)
         {
-            float newScale = transform.localScale.x + growthRate * Time.deltaTime;
-            newScale = Mathf.Min(newScale, maxScale);
+            float newScale = transform.localScale.x + playerMasterData.growthRate * Time.deltaTime;
+            newScale = Mathf.Min(newScale, playerMasterData.maxScale);
             transform.localScale = new Vector2(newScale, newScale);
             yield return null;
         }
@@ -628,15 +569,15 @@ void MoveToPortal()
 
     IEnumerator DarkenCharacter() //土管にぶつかって落ちていくとき、だんだん暗くする
     {
-        while (playerImage.color.r > minBrightness)
+        while (playerImage.color.r > playerMasterData.minBrightness)
         {
             Color newColor = playerImage.color;
 
-            float darkenAmount = darkeningRate * Time.deltaTime;
+            float darkenAmount = playerMasterData.darkeningRate * Time.deltaTime;
             newColor = new Color(
-                Mathf.Max(newColor.r - darkenAmount, minBrightness),
-                Mathf.Max(newColor.g - darkenAmount, minBrightness),
-                Mathf.Max(newColor.b - darkenAmount, minBrightness),
+                Mathf.Max(newColor.r - darkenAmount, playerMasterData.minBrightness),
+                Mathf.Max(newColor.g - darkenAmount, playerMasterData.minBrightness),
+                Mathf.Max(newColor.b - darkenAmount, playerMasterData.minBrightness),
                 newColor.a
             );
 

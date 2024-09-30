@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02564d096d29184418ce01823ab6a773, type: 3}
+  m_Name: PlayerMaster
+  m_EditorClassIdentifier: 
+  jumpPower: 5
+  itemCalory: 41
+  caloryOffset: 0.3
+  gaugeMax: 100
+  gaugeMin: 0
+  gaugeCount: 6
+  gaugeDecreaseCount: 20
+  gaugeDecreaseValue: 1
+  gaugeDecreaseValue_Jump: 0.3
+  gaugeHealValue: 10
+  healValueOffset: 2
+  SEVolume: 0.1
+  fallSpeed: 5
+  rotateSpeed: -14
+  particleOffset: {x: 0, y: -0.2, z: 0}
+  growthRate: 0.1
+  maxScale: 2.5
+  darkeningRate: 0.5
+  minBrightness: 0.2
+  shrinkDuration: 4
+  minSize: 0
+  currentRotationSpeed: 360
+  finalPosition: {x: 0, y: 0}
+  minSpeed: 0.01
+  deceleration: 0.5
