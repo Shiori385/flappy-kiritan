@@ -36,6 +36,8 @@ public class PipeController : MonoBehaviour
     void Start()
     {
         pipeRB = GetComponent<Rigidbody2D>();
+        // あまりFindは使わないほうが良かったりします
+        // ただ、ゲームの規模ではによっては別に良いので、今回は気にせずに。。
         playerFlagManager = GameObject.FindGameObjectWithTag(Variables.tag_PlayerFlagManager)
                             .GetComponent<PlayerFlagManager>();
     }
@@ -69,6 +71,7 @@ public class PipeController : MonoBehaviour
         if(collision.gameObject.CompareTag(Variables.tag_Player))
         {
             playerFlagManager.isCollided = true; //土管とプレイヤーの接触フラグをtrueにする
+            playerFlagManager.deathColliderEvent.Invoke(); //プレイヤーが土管と接触した時のイベントを呼び出す
             AudioSource.PlayClipAtPoint(SE_pipeCollided, Camera.main.transform.position, pipeCollidedSEVolume); //土管と接触した時の効果音を再生
             // パーティクルの生成
             Vector3 collisionPoint = collision.contacts[0].point; //位置を指定して

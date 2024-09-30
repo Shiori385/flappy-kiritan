@@ -38,7 +38,6 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -6233,6 +6232,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   isCollided: 0
   isGoal: 0
+  isGameEnd: 0
   isInPortal: 0
   isIrisOutStart: 0
   isIrisOutEnd: 0
@@ -7081,6 +7081,50 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1725774806}
   m_CullTransparentMesh: 1
+--- !u!1 &1772114578
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1772114580}
+  - component: {fileID: 1772114579}
+  m_Layer: 0
+  m_Name: AudioManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1772114579
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1772114578}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 988ed821bef46ca44ad05c65451d6796, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &1772114580
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1772114578}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1794811367
 GameObject:
   m_ObjectHideFlags: 0
@@ -7385,22 +7429,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 21a417a5ef1495f4ebc07e29f3574e6b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  playerMasterData: {fileID: 11400000, guid: 330f8329a4f9bfb49a4aaaa121a1067d, type: 2}
   playerFlagManager: {fileID: 1454261041}
-  UI_GameStart: {fileID: 823606080}
   UI_ScoreNum: {fileID: 1922501165}
   UI_ScoreDifference: {fileID: 1946935715}
   SE_GetScore: {fileID: 8300000, guid: da889021897250c4186b1923440f2dc8, type: 3}
-  SEVolume: 0.1
-  itemCalory: 41
-  caloryOffset: 0.3
   isScoreGotNowShowed: 0
   particlePrefab: {fileID: 5700784828077083704, guid: ed962e35f7fa6f34f8d27aa6d19ea293, type: 3}
-  particleOffset: {x: 0, y: -0.2, z: 0}
-  objectGenerator: {fileID: 436107102}
-  jumpPower: 5
   playerRespawnPos: {fileID: 1853069465}
-  fallSpeed: 5
-  rotateSpeed: -14
   image_Normal: {fileID: 21300000, guid: ec0262423ad8e884cb87868d0d2d12a2, type: 3}
   image_Damaged: {fileID: 21300000, guid: 96124234c6fdafe408376bb962331926, type: 3}
   image_Cleared: {fileID: 0}
@@ -7430,25 +7466,7 @@ MonoBehaviour:
   SE_FadeOut: {fileID: 8300000, guid: 3b728eedf8d098140b69ce444bf8c9f7, type: 3}
   satietyGauge: {fileID: 379352935}
   satietyGaugeText: {fileID: 1083884292}
-  gaugeMax: 100
-  gaugeMin: 0
-  gaugeCount: 1
-  gaugeDecreaseCount: 60
-  gaugeDecreaseValue: 1.4
-  gaugeDecreaseValue_Jump: 2
-  gaugeHealValue: 12
-  healValueOffset: 2
-  growthRate: 0.06
-  maxScale: 2.5
-  darkeningRate: 0.06
-  minBrightness: 0.5
-  finalPosition: {x: 0, y: 0}
-  minSpeed: 0.7
-  deceleration: -7
   pipeController: {fileID: 4325858158182573143, guid: f628b1a24a1c4c14d87ccbfb6ae8317d, type: 3}
-  shrinkDuration: 3
-  minSize: 0
-  currentRotationSpeed: -20
 --- !u!50 &1797024088
 Rigidbody2D:
   serializedVersion: 4
@@ -10621,6 +10639,7 @@ BoxCollider2D:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
+  - {fileID: 1772114580}
   - {fileID: 519420032}
   - {fileID: 619394802}
   - {fileID: 1797024090}
