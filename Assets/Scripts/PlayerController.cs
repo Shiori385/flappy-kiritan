@@ -42,19 +42,8 @@ public class PlayerController : MonoBehaviour
     #endregion
 
     #region Var_CV
-    [Header("オーディオソース: 負傷用")]
-    [SerializeField] AudioSource audioSource_Hurt;
-    [Header("オーディオソース: 掛け声用")]
-    [SerializeField] AudioSource audioSource_Yell;
     [Header("オーディオソース: ポータル吸い込まれ用")]
     public AudioSource audioSource_Portal;
-    [Header("オーディオソース: 出発用")]
-    [SerializeField] AudioSource audioSource_Departure;
-    [Header("オーディオソース: 空腹時")]
-    [SerializeField] AudioSource audioSource_Hunger;
-    [Header("オーディオソース: フェードアウト用")]
-    [SerializeField] AudioSource audioSource_FadeOut;
-    [Header("セリフ: 負傷")]
     [SerializeField] AudioClip[] CV_Hurt;
     [Header("セリフ: 掛け声")]
     [SerializeField] AudioClip[] CV_Yell;
@@ -144,7 +133,9 @@ public class PlayerController : MonoBehaviour
         // 最初のジャンプの待機中に満腹度を減らさせないため
 
         // ジャンプ条件チェック && 入力情報チェック
-        if (IsCanJump() && Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0))
+        // ★：ごめんなさいミスってました（内容はちょうどいいので考えてみていただけると）
+        if (IsCanJump() && Input.GetKeyDown(KeyCode.Space) ||
+            IsCanJump() && Input.GetMouseButtonDown(0))
         {
             Jump();
         }
@@ -224,7 +215,7 @@ public class PlayerController : MonoBehaviour
             GameManager.isGameStarted = true; //ゲーム開始フラグがtrueになる
             PlayerFlagManager.isAlwaysUIActive = true;
             playerRB.gravityScale = usualGravityScale; //重力が既定の値になる
-            audioSource_Departure.PlayOneShot(CV_Departure);
+            AudioManager.Instance.PlaySound(CV_Departure);
 
             playerRB.velocity = Vector2.up * playerMasterData.jumpPower;
 
@@ -234,7 +225,7 @@ public class PlayerController : MonoBehaviour
 
         }
 
-        SayYellCV(audioSource_Yell, CV_Yell);
+        SayYellCV(CV_Yell);
         playerRB.velocity = Vector2.up * playerMasterData.jumpPower;
 
         SatietyGaugeDecrease(playerMasterData.gaugeDecreaseValue_Jump); //満腹度の減少
@@ -276,7 +267,7 @@ public class PlayerController : MonoBehaviour
 
         if(!isSayCollided) //負傷時のセリフの再生フラグがfalseのとき Updateで呼ばれてるから重複しないように
         {
-            SayHurtCV(audioSource_Hurt, CV_Hurt); //負傷時のセリフを再生
+            SayHurtCV(CV_Hurt); //負傷時のセリフを再生
             isSayCollided = true; //負傷時のセリフの再生フラグをtrueに
         }
     }
@@ -298,7 +289,7 @@ public class PlayerController : MonoBehaviour
 
         if(!isSayHunger) //満腹度が0になったときのセリフの再生フラグがfalseのとき
         {
-            SayHungerCV(audioSource_Hunger, CV_Hunger); //満腹度が0になったときのセリフを再生
+            SayHungerCV(CV_Hunger); //満腹度が0になったときのセリフを再生
             isSayHunger = true; //満腹度が0になったときのセリフの再生フラグをtrueに
         }
     }
@@ -327,56 +318,52 @@ public class PlayerController : MonoBehaviour
         yield return new WaitForSeconds(1.5f);
         if(!hasFadeOutSEPlayed)
         {
-            audioSource_FadeOut.PlayOneShot(SE_FadeOut);
+            AudioManager.Instance.PlaySound(SE_FadeOut);
             hasFadeOutSEPlayed = true;
         }
     }
 #endregion
 
 #region セリフ関連
-    void SayYellCV(AudioSource audioSource, AudioClip[] clip)
+    void SayYellCV(AudioClip[] clip)
     {
         if (clip != null && clip.Length > 0)
         {
             // 現在再生中の音声を停止
-            audioSource.Stop();
-
-            // 現在のクリップを設定
-            audioSource.clip = clip[currentClipIndex];
+            AudioManager.Instance.StopSound();
 
             // クリップを再生
-            audioSource.Play();
+            AudioManager.Instance.PlaySound(clip[currentClipIndex]);
 
             // デバッグログを追加
-            Debug.Log($"Playing Yell clip at index {currentClipIndex}: {audioSource.clip.name}");
+            Debug.Log($"Playing Yell clip at index {currentClipIndex}: {clip[currentClipIndex].name}");
 
             // インデックスを次に進める
             currentClipIndex = (currentClipIndex + 1) % clip.Length;
         }
     }
 
-    void SayHurtCV(AudioSource audioSource, AudioClip[] clip)
+    void SayHurtCV(AudioClip[] clip)
     {
 
-        audioSource_Yell.Stop();
+        AudioManager.Instance.StopSound();
 
         if (clip != null && clip.Length > 0)
         {
             int randomIndex = Random.Range(0, clip.Length);
-            audioSource.clip = clip[randomIndex];
-            audioSource.Play();
+            AudioManager.Instance.PlaySound(clip[randomIndex]);
         }   
 
     }
 
-    void SayHungerCV(AudioSource audioSource, AudioClip clip)
+    void SayHungerCV(AudioClip clip)
     {
-        audioSource_Yell.Stop();
+
+        AudioManager.Instance.StopSound();
 
         if (clip != null)
         {
-            audioSource.clip = clip;
-            audioSource.Play();
+            AudioManager.Instance.PlaySound(clip);
         }
     }
 #endregion
